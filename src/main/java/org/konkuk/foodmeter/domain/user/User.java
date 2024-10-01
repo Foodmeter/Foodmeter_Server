@@ -27,7 +27,7 @@ public class User extends BaseTimeEntity {
     private Role role;
 
     // ImageUrl 추가
-    @OneToMany(mappedBy = "users")
+    @OneToMany(mappedBy = "user")
     private List<FoodImage> foodImages;
 
     @Builder
