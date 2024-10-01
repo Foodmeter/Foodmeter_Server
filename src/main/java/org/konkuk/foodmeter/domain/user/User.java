@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.konkuk.foodmeter.domain.base.BaseTimeEntity;
+import org.konkuk.foodmeter.domain.foodImage.FoodImage;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -24,6 +27,9 @@ public class User extends BaseTimeEntity {
     private Role role;
 
     // ImageUrl 추가
+    @OneToMany(mappedBy = "users")
+    private List<FoodImage> foodImages;
+
     @Builder
     public User(Long id, Provider provider, Role role) {
         this.id = id;

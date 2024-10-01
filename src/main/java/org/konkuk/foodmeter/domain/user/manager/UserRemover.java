@@ -10,7 +10,7 @@ public class UserRemover {
 
     private final UserRepository userRepository;
 
-    public void deleteByUserId(final Long userId) {
+    public void deleteById(final Long userId) {
         userRepository.deleteById(userId);
     }
 }
