@@ -3,7 +3,7 @@ spring:
     - db
 
 springdoc:
-  packages-to-scan: org.k_lab.catchku
+  packages-to-scan: org.konkuk.foodmeter
   default-consumes-media-type: application/json;charset=UTF-8
   default-produces-media-type: application/json;charset=UTF-8
   swagger-ui:
