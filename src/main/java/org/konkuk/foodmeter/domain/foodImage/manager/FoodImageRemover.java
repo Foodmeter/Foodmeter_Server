@@ -12,4 +12,8 @@ public class FoodImageRemover {
     public void deleteById(Long foodImageId) {
         foodImageRepository.deleteById(foodImageId);
     }
+
+    public void deleteByImageUrl(String imageUrl) {
+        foodImageRepository.deleteByImageUrl(imageUrl);
+    }
 }

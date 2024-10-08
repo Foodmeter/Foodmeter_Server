@@ -1,6 +1,5 @@
 package org.konkuk.foodmeter.api.foodImage.service;
 
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.konkuk.foodmeter.api.foodImage.dto.request.FoodImageCreateDto;
@@ -8,6 +7,7 @@ import org.konkuk.foodmeter.api.foodImage.dto.response.FoodImageAddDto;
 import org.konkuk.foodmeter.common.exception.S3Exception;
 import org.konkuk.foodmeter.domain.foodImage.FoodImage;
 import org.konkuk.foodmeter.domain.foodImage.Grade;
+import org.konkuk.foodmeter.domain.foodImage.manager.FoodImageRemover;
 import org.konkuk.foodmeter.domain.foodImage.manager.FoodImageSaver;
 import org.konkuk.foodmeter.domain.user.User;
 import org.konkuk.foodmeter.domain.user.manager.UserRetriever;
@@ -23,8 +23,8 @@ import java.io.IOException;
 public class FoodImageService {
     private final UserRetriever userRetriever;
     private final FoodImageSaver foodImageSaver;
+    private final FoodImageRemover foodImageRemover;
     private final S3Service s3Service;
-    private final EntityManager entityManager;
 
     @Transactional
     public FoodImageAddDto createFoodImage(final FoodImageCreateDto foodImageCreateDto, final Long userId) {
@@ -57,5 +57,6 @@ public class FoodImageService {
         } catch (RuntimeException | IOException e) {
             throw new RuntimeException(e.getMessage());
         }
+        foodImageRemover.deleteByImageUrl(url);
     }
 }
