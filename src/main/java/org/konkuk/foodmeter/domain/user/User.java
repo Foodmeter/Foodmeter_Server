@@ -20,6 +20,9 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
+    private String name;
+
     @Enumerated(EnumType.STRING)
     private Provider provider;
 
@@ -31,8 +34,9 @@ public class User extends BaseTimeEntity {
     private List<FoodImage> foodImages;
 
     @Builder
-    public User(Long id, Provider provider, Role role) {
+    public User(Long id, String name, Provider provider, Role role) {
         this.id = id;
+        this.name = name;
         this.provider = provider;
         this.role = role;
     }

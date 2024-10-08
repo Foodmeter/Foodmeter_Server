@@ -1,6 +1,6 @@
 spring:
   profiles.include:
-    - db
+    - private
 
 springdoc:
   packages-to-scan: org.konkuk.foodmeter
