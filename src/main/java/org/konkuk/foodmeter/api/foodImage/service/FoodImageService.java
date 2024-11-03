@@ -4,10 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.konkuk.foodmeter.api.foodImage.dto.request.FoodImageCreateDto;
 import org.konkuk.foodmeter.api.foodImage.dto.response.FoodImageAddDto;
+import org.konkuk.foodmeter.common.exception.FoodImageException;
 import org.konkuk.foodmeter.common.exception.S3Exception;
+import org.konkuk.foodmeter.common.exception.code.FoodImageErrorCode;
 import org.konkuk.foodmeter.domain.foodImage.FoodImage;
 import org.konkuk.foodmeter.domain.foodImage.Grade;
 import org.konkuk.foodmeter.domain.foodImage.manager.FoodImageRemover;
+import org.konkuk.foodmeter.domain.foodImage.manager.FoodImageRetriever;
 import org.konkuk.foodmeter.domain.foodImage.manager.FoodImageSaver;
 import org.konkuk.foodmeter.domain.user.User;
 import org.konkuk.foodmeter.domain.user.manager.UserRetriever;
@@ -16,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,6 +29,7 @@ public class FoodImageService {
     private final UserRetriever userRetriever;
     private final FoodImageSaver foodImageSaver;
     private final FoodImageRemover foodImageRemover;
+    private final FoodImageRetriever foodImageRetriever;
     private final S3Service s3Service;
 
     @Transactional
@@ -58,5 +64,17 @@ public class FoodImageService {
             throw new RuntimeException(e.getMessage());
         }
         foodImageRemover.deleteByImageUrl(url);
+    }
+
+    public List<String> getAllImages(final Long userId) {
+        User user = userRetriever.findById(userId);
+        List<FoodImage> foodImages = foodImageRetriever.findAllByUser(user);
+        if (foodImages == null) {
+            throw new FoodImageException(FoodImageErrorCode.NOT_FOUND_FOOD_IMAGE);
+        } else {
+            return foodImages.stream()
+                    .map(FoodImage::getImageUrl)
+                    .collect(Collectors.toList());
+        }
     }
 }

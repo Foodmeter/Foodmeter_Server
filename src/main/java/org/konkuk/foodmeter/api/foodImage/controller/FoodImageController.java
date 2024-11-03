@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/foodImage")
@@ -31,5 +33,12 @@ public class FoodImageController {
     public ResponseEntity<Void> deleteImage(@RequestParam("image_url") final String url) {
         foodImageService.deleteImage(url);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/allImages")
+    @Operation(summary = "모든 음식 사진 가져오기 API", description = "음식 사진을 전부 가져옵니다.")
+    public ResponseEntity<List<String>> getAllImages(@RequestParam("userId") Long userId) {
+        List<String> imageUrls = foodImageService.getAllImages(userId);
+        return ResponseEntity.ok(imageUrls);
     }
 }
