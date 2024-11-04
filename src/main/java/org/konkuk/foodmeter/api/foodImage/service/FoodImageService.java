@@ -15,11 +15,18 @@ import org.konkuk.foodmeter.domain.foodImage.manager.FoodImageSaver;
 import org.konkuk.foodmeter.domain.user.User;
 import org.konkuk.foodmeter.domain.user.manager.UserRetriever;
 import org.konkuk.foodmeter.external.service.s3.S3Service;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,6 +38,8 @@ public class FoodImageService {
     private final FoodImageRemover foodImageRemover;
     private final FoodImageRetriever foodImageRetriever;
     private final S3Service s3Service;
+    private final RestTemplate restTemplate; // RestTemplate 주입
+
 
     @Transactional
     public FoodImageAddDto createFoodImage(final FoodImageCreateDto foodImageCreateDto, final Long userId) {
@@ -41,9 +50,24 @@ public class FoodImageService {
         } catch (IOException ex) {
             log.info("Service Layer Upload Fail");
         }
+
         // AI model에서 응답을 받고 진행
-        // Grage 설정 수정 필요
-        FoodImage foodImage = FoodImage.builder().grade(Grade.A).user(user).imageUrl(imageUrl).build();
+        String aiModelUrl = "http://ai-model:5101/analyze"; // AI 모델 API URL
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // 요청 JSON 데이터
+        Map<String, String> requestBody = Map.of("imageUrl", imageUrl);
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        // AI 모델로부터 분석 결과 받기
+        ResponseEntity<Grade> responseEntity = restTemplate.exchange(
+                aiModelUrl, HttpMethod.POST, requestEntity, Grade.class);
+
+        Grade grade = responseEntity.getBody();
+
+        FoodImage foodImage = FoodImage.builder().grade(grade).user(user).imageUrl(imageUrl).build();
         foodImageSaver.save(foodImage);
 
         return FoodImageAddDto.from(foodImage);
