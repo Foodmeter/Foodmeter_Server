@@ -1,5 +1,6 @@
 package org.konkuk.foodmeter.api.foodImage.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.konkuk.foodmeter.api.foodImage.dto.request.FoodImageCreateDto;
@@ -50,7 +51,7 @@ public class FoodImageService {
         } catch (IOException ex) {
             log.info("Service Layer Upload Fail");
         }
-
+        log.info("url : " + imageUrl);
         // AI model에서 응답을 받고 진행
         String aiModelUrl = "http://ai-model:5101/analyze"; // AI 모델 API URL
         HttpHeaders headers = new HttpHeaders();
@@ -58,15 +59,27 @@ public class FoodImageService {
 
         // 요청 JSON 데이터
         Map<String, String> requestBody = Map.of("imageUrl", imageUrl);
-
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
         // AI 모델로부터 분석 결과 받기
-        ResponseEntity<Grade> responseEntity = restTemplate.exchange(
-                aiModelUrl, HttpMethod.POST, requestEntity, Grade.class);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                aiModelUrl, HttpMethod.POST, requestEntity, String.class);
 
-        Grade grade = responseEntity.getBody();
+        String responseBody = responseEntity.getBody();
+        log.info("AI 모델 응답 (String): " + responseBody);
 
+        // 응답을 Map으로 변환하여 grade 값을 추출
+        String gradeDetail = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> responseMap = objectMapper.readValue(responseBody, Map.class);
+            gradeDetail = responseMap.get("grade");
+        } catch (Exception e) {
+            log.error("AI 모델 응답 파싱 실패: ", e);
+            throw new RuntimeException("AI 모델 응답 파싱 실패");
+        }
+        Grade grade = convertStringToGrade(gradeDetail);
+        log.info("grade : " + grade);
         FoodImage foodImage = FoodImage.builder().grade(grade).user(user).imageUrl(imageUrl).build();
         foodImageSaver.save(foodImage);
 
@@ -100,5 +113,16 @@ public class FoodImageService {
                     .map(FoodImage::getImageUrl)
                     .collect(Collectors.toList());
         }
+    }
+
+    private Grade convertStringToGrade(String gradeDetail){
+        return switch (gradeDetail) {
+            case "1++" -> Grade.A;
+            case "1+" -> Grade.B;
+            case "1" -> Grade.C;
+            case "2" -> Grade.D;
+            case "3" -> Grade.E;
+            default -> throw new IllegalArgumentException("유효하지 않은 grade 값: " + gradeDetail);
+        };
     }
 }
